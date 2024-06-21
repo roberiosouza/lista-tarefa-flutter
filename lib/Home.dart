@@ -14,9 +14,13 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   List _lista = [];
 
-  _salvarArquivo() async {
+  Future<File> _getArquivo() async {
     final diretorio = await getApplicationCacheDirectory();
-    var arquivo = File("${diretorio.path}/tarefas.json");
+    return File("${diretorio.path}/tarefa.json");
+  }
+
+  _salvarArquivo() async {
+    var arquivo = await _getArquivo();
 
     Map<String, dynamic> tarefa = Map();
     tarefa["titulo"] = "Ir ao mercado";
@@ -25,6 +29,26 @@ class _HomeState extends State<Home> {
 
     String dados = json.encode(_lista);
     arquivo.writeAsString(dados);
+  }
+
+  _lerArquivo() async {
+    try {
+      final arquivo = await _getArquivo();
+      return arquivo.readAsString();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _lerArquivo().then((dados) {
+      setState(() {
+        _lista = json.decode(dados);
+      });
+    });
   }
 
   @override
@@ -38,7 +62,7 @@ class _HomeState extends State<Home> {
         child: ListView.builder(
             itemCount: _lista.length,
             itemBuilder: (context, index) {
-              return ListTile(title: Text(_lista[index]));
+              return ListTile(title: Text(_lista[index]["titulo"]));
             }),
       ),
       floatingActionButton: FloatingActionButton(
