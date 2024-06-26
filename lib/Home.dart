@@ -72,15 +72,37 @@ class _HomeState extends State<Home> {
         child: ListView.builder(
             itemCount: _lista.length,
             itemBuilder: (context, index) {
-              return CheckboxListTile(
-                  title: Text(_lista[index]["titulo"]),
-                  value: _lista[index]["realizada"],
-                  onChanged: (val) {
+              return Dismissible(
+                  onDismissed: (direction) {
                     setState(() {
-                      _lista[index]["realizada"] = val;
+                      _lista.removeAt(index);
                     });
                     _salvarArquivo();
-                  });
+                  },
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    color: Colors.red,
+                    padding: EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Icon(
+                          Icons.delete,
+                          color: Colors.white,
+                        )
+                      ],
+                    ),
+                  ),
+                  key: Key(index.toString()),
+                  child: CheckboxListTile(
+                      title: Text(_lista[index]["titulo"]),
+                      value: _lista[index]["realizada"],
+                      onChanged: (val) {
+                        setState(() {
+                          _lista[index]["realizada"] = val;
+                        });
+                        _salvarArquivo();
+                      }));
               // return ListTile(title: Text(_lista[index]["titulo"]));
             }),
       )),
