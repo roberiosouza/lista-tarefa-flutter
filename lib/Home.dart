@@ -13,19 +13,27 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List _lista = [];
+  TextEditingController _controllerTarefa = TextEditingController();
 
   Future<File> _getArquivo() async {
     final diretorio = await getApplicationCacheDirectory();
     return File("${diretorio.path}/tarefa.json");
   }
 
+  _salvarTarefa() {
+    Map<String, dynamic> tarefa = Map();
+    tarefa["titulo"] = _controllerTarefa.text;
+    tarefa["realizada"] = false;
+    setState(() {
+      _lista.add(tarefa);
+    });
+
+    _salvarArquivo();
+    _controllerTarefa.text = "";
+  }
+
   _salvarArquivo() async {
     var arquivo = await _getArquivo();
-
-    Map<String, dynamic> tarefa = Map();
-    tarefa["titulo"] = "Ir ao mercado";
-    tarefa["realizada"] = false;
-    _lista.add(tarefa);
 
     String dados = json.encode(_lista);
     arquivo.writeAsString(dados);
@@ -59,12 +67,23 @@ class _HomeState extends State<Home> {
         backgroundColor: Colors.deepPurpleAccent,
       ),
       body: Expanded(
+          child: Container(
+        padding: EdgeInsets.only(bottom: 80),
         child: ListView.builder(
             itemCount: _lista.length,
             itemBuilder: (context, index) {
-              return ListTile(title: Text(_lista[index]["titulo"]));
+              return CheckboxListTile(
+                  title: Text(_lista[index]["titulo"]),
+                  value: _lista[index]["realizada"],
+                  onChanged: (val) {
+                    setState(() {
+                      _lista[index]["realizada"] = val;
+                    });
+                    _salvarArquivo();
+                  });
+              // return ListTile(title: Text(_lista[index]["titulo"]));
             }),
-      ),
+      )),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showDialog(
@@ -73,6 +92,7 @@ class _HomeState extends State<Home> {
                 return AlertDialog(
                   title: Text("Digite uma tarefa"),
                   content: TextField(
+                    controller: _controllerTarefa,
                     decoration: InputDecoration(labelText: "Digite sua tarefa"),
                     onChanged: (text) {},
                   ),
@@ -80,7 +100,12 @@ class _HomeState extends State<Home> {
                     ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         child: Text("Cancelar")),
-                    ElevatedButton(onPressed: () {}, child: Text("Salvar"))
+                    ElevatedButton(
+                        onPressed: () {
+                          _salvarTarefa();
+                          Navigator.pop(context);
+                        },
+                        child: Text("Salvar"))
                   ],
                 );
               });
