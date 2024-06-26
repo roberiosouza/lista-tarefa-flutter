@@ -14,6 +14,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   List _lista = [];
   TextEditingController _controllerTarefa = TextEditingController();
+  Map<String, dynamic> _tarefaRemovida = Map();
 
   Future<File> _getArquivo() async {
     final diretorio = await getApplicationCacheDirectory();
@@ -74,10 +75,28 @@ class _HomeState extends State<Home> {
             itemBuilder: (context, index) {
               return Dismissible(
                   onDismissed: (direction) {
+                    ScaffoldMessenger.of(context).clearSnackBars();
+                    _tarefaRemovida = _lista[index];
+
                     setState(() {
                       _lista.removeAt(index);
                     });
                     _salvarArquivo();
+
+                    final snackBar = SnackBar(
+                      content: Text("Tarefa removida!"),
+                      duration: Duration(seconds: 5),
+                      action: SnackBarAction(
+                        label: "Desfazer",
+                        onPressed: () {
+                          setState(() {
+                            _lista.insert(index, _tarefaRemovida);
+                          });
+                          _salvarArquivo();
+                        },
+                      ),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
                   },
                   direction: DismissDirection.endToStart,
                   background: Container(
@@ -93,7 +112,7 @@ class _HomeState extends State<Home> {
                       ],
                     ),
                   ),
-                  key: Key(index.toString()),
+                  key: Key(DateTime.now().millisecondsSinceEpoch.toString()),
                   child: CheckboxListTile(
                       title: Text(_lista[index]["titulo"]),
                       value: _lista[index]["realizada"],
@@ -115,6 +134,7 @@ class _HomeState extends State<Home> {
                   title: Text("Digite uma tarefa"),
                   content: TextField(
                     controller: _controllerTarefa,
+                    autofocus: true,
                     decoration: InputDecoration(labelText: "Digite sua tarefa"),
                     onChanged: (text) {},
                   ),
